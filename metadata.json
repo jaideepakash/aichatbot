@@ -1,0 +1,8 @@
+{
+  "name": "Liquid Glass AI Chatbot",
+  "description": "Hyper-realistic liquid glassmorphism AI chatbot interface with fluid equal-scaling responsiveness.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

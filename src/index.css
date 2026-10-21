@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Liquid Glass AdSense Containment and Isolation Frame */
+.glass-ad-wrapper {
+  contain: layout paint style;
+  isolation: isolate;
+  position: relative;
+  border-radius: clamp(12px, 1.2vw, 18px);
+  padding: clamp(0.75rem, 1.2vw, 1.25rem);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Custom frosted glass scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

@@ -1,14 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
-});
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -19,6 +10,26 @@ export default async function handler(req: any, res: any) {
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ error: 'Message cannot be empty.' });
     }
+
+    // Check for API key on Vercel
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim().length === 0) {
+      return res.status(200).json({
+        reply: "🔑 **Gemini API Key Required**\n\nTo enable live responses on Vercel:\n1. Open your **Vercel Dashboard**.\n2. Go to your project > **Settings** > **Environment Variables**.\n3. Add a variable named `GEMINI_API_KEY` with your Google Gemini API key.\n4. Click **Redeploy** on your latest deployment.\n\nOnce added, your chatbot will respond instantly!",
+        remainingCredits: 150,
+        totalDailyCredits: 150,
+        costDeducted: 0,
+      });
+    }
+
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
 
     // Clean history turns: must strictly alternate user and model, starting with user
     const contents: Array<{ role: 'user' | 'model'; parts: [{ text: string }] }> = [];
@@ -71,16 +82,14 @@ export default async function handler(req: any, res: any) {
           break;
         }
       } catch (err: any) {
-        console.warn(`Model ${model} issue:`, err.message || err);
+        console.warn(`Model ${model} issue on Vercel:`, err.message || err);
         lastError = err;
       }
     }
 
     if (!replyText) {
-      if (lastError) {
-        throw lastError;
-      }
-      replyText = 'Unable to generate response at this time. Please retry in a few moments.';
+      const errDetail = lastError?.message || 'Model service temporarily busy';
+      replyText = `⚠️ **Temporary Inference Notice**\n\nThe AI model encountered a temporary issue: *${errDetail}*.\n\nPlease try asking your question again in a moment.`;
     }
 
     return res.status(200).json({
@@ -90,8 +99,12 @@ export default async function handler(req: any, res: any) {
       costDeducted: 1,
     });
   } catch (error: any) {
-    return res.status(500).json({
-      error: error.message || 'An error occurred while generating the AI response.',
+    console.error('Vercel handler error:', error);
+    return res.status(200).json({
+      reply: `⚠️ **Unable to process request**\n\nError: ${error.message || 'Unknown network error'}. Please try again.`,
+      remainingCredits: 150,
+      totalDailyCredits: 150,
+      costDeducted: 0,
     });
   }
 }

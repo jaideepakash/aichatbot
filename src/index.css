@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+@layer utilities {
+  /* Keyframes for the looping Gemini-style RGB line shifting animation */
+  @keyframes rgbGradientMove {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  /* Base wrapper state around the search box */
+  .plock-input-glow-wrapper {
+    position: relative;
+    border-radius: 9999px; /* Fully rounded capsule */
+    padding: 1px; /* Emulates a ultra-precise border stroke gap */
+    background: #303132; /* Default dark border color */
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Animated RGB Light state triggered when input is clicked/focused */
+  .plock-input-glow-wrapper:focus-within {
+    background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570, #4285f4);
+    background-size: 300% 100%;
+    animation: rgbGradientMove 2.5s linear infinite;
+    box-shadow: 0 0 20px rgba(155, 114, 203, 0.2);
+  }
+}
+
 /* Liquid Glass AdSense Containment and Isolation Frame */
 .glass-ad-wrapper {
   contain: layout paint style;
@@ -28,3 +53,4 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.35);
 }
+

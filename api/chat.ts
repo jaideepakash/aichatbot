@@ -120,10 +120,22 @@ function generateAutonomousResponse(rawMessage: string, _history?: any[]): strin
     return `Hello! Welcome to the **Liquid Glass AI Assistant**.\n\nI can answer **any question** you have across software engineering, science, mathematics, cooking, health, finance, history, creative writing, or general advice.\n\nWhat would you like to explore today?`;
   }
 
-  // 10. UNIVERSAL DYNAMIC KNOWLEDGE SYNTHESIZER FOR ANY PROMPT
+  // 10. HONEST AI INFERENCE NOTICE
   const cleanTitle = query.replace(/[?.,!]+$/, '');
+  return `### 💡 Real AI Intelligence Notice
 
-  return `### Comprehensive Guide: ${cleanTitle}\n\nHere is a direct, detailed, and structured answer to your question:\n\n#### 1. Core Concept & Direct Answer\nWhen examining **${cleanTitle}**, the fundamental principle revolves around understanding the underlying mechanisms and applying proven, practical methods. Whether approached from an analytical, practical, or theoretical standpoint, clarity of definition is the first essential step.\n\n#### 2. Key Elements & Important Principles\n*   **Fundamental Drivers:** Identifying the primary factors that influence this topic ensures you focus on high-impact aspects.\n*   **Execution Strategy:** Break complex challenges into manageable, incremental steps to ensure consistent progress and verifiable outcomes.\n*   **Verification & Assessment:** Regularly validate intermediate results against defined benchmarks or expectations.\n\n#### 3. Practical Steps & Recommendations\n1. **Initial Assessment:** Clarify your exact goals, constraints, and available resources.\n2. **Implementation:** Proceed with systematic execution, keeping track of adjustments along the way.\n3. **Optimization:** Refine your approach based on observed outcomes and real-world feedback.\n\n#### 4. Summary & Pro-Tip\n> **Key Takeaway:** Consistent execution and clear fundamentals yield the most reliable results.\n\nIf you would like a deeper dive, specific examples, or tailored calculations on this topic, simply ask!`;
+You asked: **"${cleanTitle}"**
+
+To answer open-ended questions like this with full depth, accurate facts, and live information, the chatbot needs to connect to the **Google Gemini AI model**.
+
+#### Why you are seeing this message:
+Your application is currently running on Vercel without an active **\`GEMINI_API_KEY\`**.
+
+#### How to enable live, unlimited answers:
+1. Get a 100% free key from **[Google AI Studio](https://aistudio.google.com/app/apikey)** (takes 30 seconds).
+2. In your **Vercel Project Dashboard**: Go to **Settings > Environment Variables**, add a variable named \`GEMINI_API_KEY\` with your key, and click **Redeploy**.
+
+Once connected, Google Gemini will generate thorough, accurate, human-quality answers for **any question or topic**!`;
 }
 
 export default async function handler(req: any, res: any) {

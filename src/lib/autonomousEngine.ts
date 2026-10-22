@@ -394,30 +394,21 @@ Warm regards,
   }
 
   // -------------------------------------------------------------
-  // 12. DYNAMIC UNIVERSAL KNOWLEDGE SYNTHESIZER FOR ANY PROMPT
-  // -------------------------------------------------------------
-  // Extracts topic and provides a rich, structured, articulate direct answer
+  // 10. HONEST AI INFERENCE NOTICE
   const cleanTitle = query.replace(/[?.,!]+$/, '');
+  return `### 💡 Real AI Intelligence Notice
 
-  return `### Comprehensive Guide: ${cleanTitle}
+You asked: **"${cleanTitle}"**
 
-Here is a direct, detailed, and structured answer to your question:
+To answer open-ended questions like this with full depth, accurate facts, and live information, the chatbot needs to connect to the **Google Gemini AI model**.
 
-#### 1. Core Concept & Direct Answer
-When examining **${cleanTitle}**, the fundamental principle revolves around understanding the underlying mechanisms and applying proven, practical methods. Whether approached from an analytical, practical, or theoretical standpoint, clarity of definition is the first essential step.
+#### Why you are seeing this message:
+Your application is currently running without an active **\`GEMINI_API_KEY\`** on your deployment host.
 
-#### 2. Key Elements & Important Principles
-*   **Fundamental Drivers:** Identifying the primary factors that influence this topic ensures you focus on high-impact aspects.
-*   **Execution Strategy:** Break complex challenges into manageable, incremental steps to ensure consistent progress and verifiable outcomes.
-*   **Verification & Assessment:** Regularly validate intermediate results against defined benchmarks or expectations.
+#### How to enable live, unlimited answers:
+1. Get a 100% free key from **[Google AI Studio](https://aistudio.google.com/app/apikey)** (takes 30 seconds).
+2. If deployed on **Vercel**: Go to **Project Settings > Environment Variables**, add \`GEMINI_API_KEY\`, and click **Redeploy**.
+3. If running locally: Add \`GEMINI_API_KEY=your_key\` to your \`.env\` file.
 
-#### 3. Practical Steps & Recommendations
-1. **Initial Assessment:** Clarify your exact goals, constraints, and available resources.
-2. **Implementation:** Proceed with systematic execution, keeping track of adjustments along the way.
-3. **Optimization:** Refine your approach based on observed outcomes and real-world feedback.
-
-#### 4. Summary & Pro-Tip
-> **Key Takeaway:** Consistent execution and clear fundamentals yield the most reliable results. 
-
-If you would like a deeper dive, specific examples, or tailored calculations on this topic, simply ask!`;
+Once connected, Google Gemini will generate thorough, accurate, human-quality answers for **any topic or question**!`;
 }

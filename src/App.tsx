@@ -133,45 +133,151 @@ To ensure safety and reliability, enterprise architectures implement verificatio
   }
 ];
 
-function renderFormattedText(text: string) {
+function CodeSnippet({ code, lang }: { code: string; lang?: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-2.5 rounded-xl overflow-hidden border border-white/15 bg-black/50 shadow-lg">
+      <div className="px-3.5 py-1.5 bg-white/[0.06] border-b border-white/10 flex items-center justify-between text-xs">
+        <span className="font-mono text-[0.7rem] text-cyan-300 font-semibold uppercase tracking-wider">
+          {lang || 'code'}
+        </span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-[0.7rem] px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-colors"
+        >
+          {copied ? '✓ Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre className="p-3.5 text-xs font-mono text-cyan-100 overflow-x-auto leading-relaxed">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+function FormattedContent({ text }: { text: string }) {
   const codeBlockRegex = /```([\w-]*)\n?([\s\S]*?)```/g;
-  const parts: Array<{ type: 'text' | 'code'; lang?: string; content: string }> = [];
+  const segments: Array<{ type: 'text' | 'code'; lang?: string; content: string }> = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = codeBlockRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ type: 'text', content: text.substring(lastIndex, match.index) });
+      segments.push({ type: 'text', content: text.substring(lastIndex, match.index) });
     }
-    parts.push({ type: 'code', lang: match[1], content: match[2] });
+    segments.push({ type: 'code', lang: match[1], content: match[2].trim() });
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < text.length) {
-    parts.push({ type: 'text', content: text.substring(lastIndex) });
+    segments.push({ type: 'text', content: text.substring(lastIndex) });
   }
 
-  return (
-    <div className="space-y-2 text-sm leading-relaxed">
-      {parts.map((p, idx) => {
-        if (p.type === 'code') {
-          return (
-            <div key={idx} className="my-2 rounded-xl overflow-hidden border border-white/15 bg-black/40">
-              {p.lang && (
-                <div className="px-3 py-1 bg-white/5 border-b border-white/10 text-[0.68rem] text-cyan-300 font-mono">
-                  {p.lang}
-                </div>
-              )}
-              <pre className="p-3 text-xs font-mono text-cyan-200 overflow-x-auto whitespace-pre">
-                <code>{p.content.trim()}</code>
-              </pre>
-            </div>
-          );
-        }
+  const renderInlineMarkdown = (str: string) => {
+    const tokens = str.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g);
+    return tokens.map((token, tIdx) => {
+      if (token.startsWith('`') && token.endsWith('`') && token.length > 2) {
         return (
-          <p key={idx} className="whitespace-pre-line">
-            {p.content}
-          </p>
+          <code key={tIdx} className="px-1.5 py-0.5 rounded bg-white/10 text-cyan-300 font-mono text-[0.82em]">
+            {token.slice(1, -1)}
+          </code>
         );
+      }
+      if (token.startsWith('**') && token.endsWith('**') && token.length > 4) {
+        return (
+          <strong key={tIdx} className="font-bold text-white">
+            {token.slice(2, -2)}
+          </strong>
+        );
+      }
+      if (token.startsWith('*') && token.endsWith('*') && token.length > 2) {
+        return (
+          <em key={tIdx} className="italic text-slate-200">
+            {token.slice(1, -1)}
+          </em>
+        );
+      }
+      return token;
+    });
+  };
+
+  const renderTextSegment = (rawText: string) => {
+    const lines = rawText.split('\n');
+    return lines.map((line, lIdx) => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        return <div key={lIdx} className="h-1.5" />;
+      }
+
+      if (trimmed.startsWith('### ')) {
+        return (
+          <h4 key={lIdx} className="font-bold text-sm text-cyan-300 mt-2.5 mb-1">
+            {renderInlineMarkdown(trimmed.slice(4))}
+          </h4>
+        );
+      }
+      if (trimmed.startsWith('## ')) {
+        return (
+          <h3 key={lIdx} className="font-bold text-base text-cyan-200 mt-3 mb-1.5 border-b border-white/10 pb-0.5">
+            {renderInlineMarkdown(trimmed.slice(3))}
+          </h3>
+        );
+      }
+      if (trimmed.startsWith('# ')) {
+        return (
+          <h2 key={lIdx} className="font-extrabold text-lg text-white mt-3.5 mb-1.5">
+            {renderInlineMarkdown(trimmed.slice(2))}
+          </h2>
+        );
+      }
+
+      if (/^[-*]\s+/.test(trimmed)) {
+        return (
+          <div key={lIdx} className="flex items-start gap-2 ml-2 my-0.5">
+            <span className="text-cyan-400 mt-1 text-xs">•</span>
+            <div className="flex-1">{renderInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''))}</div>
+          </div>
+        );
+      }
+
+      const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+      if (numMatch) {
+        return (
+          <div key={lIdx} className="flex items-start gap-2 ml-2 my-0.5">
+            <span className="font-mono text-cyan-400 text-xs font-bold">{numMatch[1]}.</span>
+            <div className="flex-1">{renderInlineMarkdown(numMatch[2])}</div>
+          </div>
+        );
+      }
+
+      if (trimmed.startsWith('> ')) {
+        return (
+          <blockquote key={lIdx} className="border-l-2 border-cyan-400/60 pl-3 my-1.5 text-slate-300 italic">
+            {renderInlineMarkdown(trimmed.slice(2))}
+          </blockquote>
+        );
+      }
+
+      return (
+        <p key={lIdx} className="leading-relaxed my-0.5">
+          {renderInlineMarkdown(line)}
+        </p>
+      );
+    });
+  };
+
+  return (
+    <div className="space-y-1 text-sm leading-relaxed">
+      {segments.map((seg, sIdx) => {
+        if (seg.type === 'code') {
+          return <CodeSnippet key={sIdx} code={seg.content} lang={seg.lang} />;
+        }
+        return <div key={sIdx}>{renderTextSegment(seg.content)}</div>;
       })}
     </div>
   );
@@ -366,27 +472,21 @@ export default function App() {
         sender: 'bot',
         text: data.reply || 'No response returned from the model.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        model: 'Gemini 3.8 Flash',
+        model: 'Gemini Flash',
         creditCost: 1
       };
       setMessages((prev) => [...prev, botMsg]);
 
     } catch (err: any) {
-      console.warn('Backend call failed, employing client fallback:', err);
-      // Fallback with simulated intelligent response
-      await new Promise((r) => setTimeout(r, 800));
-      setRemainingCredits((prev) => Math.max(0, prev - 1));
-      setUsedCredits((prev) => prev + 1);
-
+      console.warn('Backend call failed:', err);
       setMessages((prev) => [
         ...prev,
         {
-          id: `bot-${Date.now()}`,
+          id: `bot-err-${Date.now()}`,
           sender: 'bot',
-          text: `Synthesizing response for "${text.slice(0, 30)}...": To achieve high performance in production LLM workflows, decompose prompts with structured XML boundaries, enforce strict output schemas, and leverage temperature settings between 0.0 and 0.3 for deterministic reasoning. (1 credit used).`,
+          text: `⚠️ I was unable to connect to the AI model: ${err.message || 'Connection interrupted'}. Please try your prompt again.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          model: 'Liquid AI (Local)',
-          creditCost: 1
+          model: 'System'
         }
       ]);
     } finally {
@@ -817,7 +917,11 @@ export default function App() {
                           : 'bg-white/80 border border-white text-slate-800 shadow-[0_10px_25px_rgba(100,116,139,0.1),inset_0_1px_1px_rgba(255,255,255,0.9)]'
                       } backdrop-blur-xl`}
                     >
-                      {renderFormattedText(msg.text)}
+                      {msg.sender === 'user' ? (
+                        <p className="whitespace-pre-line">{msg.text}</p>
+                      ) : (
+                        <FormattedContent text={msg.text} />
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 mt-1 px-1 text-[0.68rem] text-slate-400">

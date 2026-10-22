@@ -20,24 +20,39 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Message cannot be empty.' });
     }
 
+    // Clean history turns: must strictly alternate user and model, starting with user
     const contents: Array<{ role: 'user' | 'model'; parts: [{ text: string }] }> = [];
+
     if (Array.isArray(history)) {
-      for (const item of history.slice(-6)) {
-        if (item && item.text && (item.role === 'user' || item.role === 'model')) {
+      for (const item of history.slice(-8)) {
+        if (item && item.text && typeof item.text === 'string' && item.text.trim()) {
+          const role = item.role === 'user' ? 'user' : 'model';
+          if (contents.length === 0 && role === 'model') {
+            continue;
+          }
+          if (contents.length > 0 && contents[contents.length - 1].role === role) {
+            continue;
+          }
           contents.push({
-            role: item.role,
-            parts: [{ text: item.text }],
+            role,
+            parts: [{ text: item.text.trim() }],
           });
         }
       }
     }
-    contents.push({
-      role: 'user',
-      parts: [{ text: message.trim() }],
-    });
+
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts = [{ text: message.trim() }];
+    } else {
+      contents.push({
+        role: 'user',
+        parts: [{ text: message.trim() }],
+      });
+    }
 
     const candidateModels = ['gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
     let replyText = '';
+    let lastError: any = null;
 
     for (const model of candidateModels) {
       try {
@@ -46,7 +61,7 @@ export default async function handler(req: any, res: any) {
           contents,
           config: {
             systemInstruction:
-              'You are the Liquid Glass AI Assistant, an advanced, highly intelligent, and articulate helper. Provide comprehensive, direct, accurate, and insightful answers tailored to the user prompt. Use clean Markdown formatting.',
+              'You are a helpful, brilliant, and versatile AI assistant. Answer the user\'s questions directly, thoroughly, and accurately. Match the language and tone of the inquiry. Use clean Markdown formatting with headers, bullet points, and code blocks when appropriate.',
             temperature: 0.7,
           },
         });
@@ -57,11 +72,15 @@ export default async function handler(req: any, res: any) {
         }
       } catch (err: any) {
         console.warn(`Model ${model} issue:`, err.message || err);
+        lastError = err;
       }
     }
 
     if (!replyText) {
-      replyText = `Synthesizing answer for "${message.trim()}": When building frontier AI systems, structure prompts with clear context boundaries and temperature control. (1 credit used).`;
+      if (lastError) {
+        throw lastError;
+      }
+      replyText = 'Unable to generate response at this time. Please retry in a few moments.';
     }
 
     return res.status(200).json({

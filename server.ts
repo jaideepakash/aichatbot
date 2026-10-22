@@ -97,22 +97,38 @@ app.post('/api/chat', async (req, res) => {
       return;
     }
 
-    // Prepare message contents for Gemini
+    // Clean history turns: must strictly alternate user and model, starting with user
     const contents: Array<{ role: 'user' | 'model'; parts: [{ text: string }] }> = [];
+
     if (Array.isArray(history)) {
-      for (const item of history.slice(-6)) {
-        if (item && item.text && (item.role === 'user' || item.role === 'model')) {
+      for (const item of history.slice(-8)) {
+        if (item && item.text && typeof item.text === 'string' && item.text.trim()) {
+          const role = item.role === 'user' ? 'user' : 'model';
+          // Skip leading model greeting if present
+          if (contents.length === 0 && role === 'model') {
+            continue;
+          }
+          // Avoid duplicate consecutive roles
+          if (contents.length > 0 && contents[contents.length - 1].role === role) {
+            continue;
+          }
           contents.push({
-            role: item.role,
-            parts: [{ text: item.text }],
+            role,
+            parts: [{ text: item.text.trim() }],
           });
         }
       }
     }
-    contents.push({
-      role: 'user',
-      parts: [{ text: message.trim() }],
-    });
+
+    // Ensure final turn is user message
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts = [{ text: message.trim() }];
+    } else {
+      contents.push({
+        role: 'user',
+        parts: [{ text: message.trim() }],
+      });
+    }
 
     let replyText = '';
 
@@ -127,7 +143,7 @@ app.post('/api/chat', async (req, res) => {
           contents,
           config: {
             systemInstruction:
-              'You are the Liquid Glass AI Assistant, an advanced, highly intelligent, and articulate helper. Provide comprehensive, direct, accurate, and insightful answers tailored to the user prompt. Use clean Markdown formatting.',
+              'You are a helpful, brilliant, and versatile AI assistant. Answer the user\'s questions directly, thoroughly, and accurately. Match the language and tone of the inquiry. Use clean Markdown formatting with headers, bullet points, and code blocks when appropriate.',
             temperature: 0.7,
           },
         });
@@ -171,6 +187,12 @@ app.post('/api/chat', async (req, res) => {
     });
   }
 });
+
+// Explicit route for Google AdSense ads.txt
+app.get('/ads.txt', (_req, res) => {
+  res.type('text/plain').send('google.com, pub-1933356530106735, DIRECT, f08c47fec0942fa0\n');
+});
+
 
 // Setup Vite middleware in development or static in production
 async function startServer() {
